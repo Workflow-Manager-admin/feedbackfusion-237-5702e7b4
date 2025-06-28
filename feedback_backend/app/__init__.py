@@ -9,15 +9,21 @@ from .routes.dashboard import blp as dashboard_blp
 
 from flask_smorest import Api
 from .models import init_db
+from .config import Config
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
-app.config["API_TITLE"] = "My Flask API"
-app.config["API_VERSION"] = "v1"
-app.config["OPENAPI_VERSION"] = "3.0.3"
-app.config['OPENAPI_URL_PREFIX'] = '/docs'
-app.config["OPENAPI_SWAGGER_UI_PATH"] = ""
-app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+
+# Load config from config.py (reads env vars)
+app.config.from_object(Config)
+
+# CORS configuration
+cors_origins = Config.CORS_ORIGINS
+if cors_origins == "*" or not cors_origins:
+    CORS(app, resources={r"/*": {"origins": "*"}})
+else:
+    # Support comma-separated origins
+    origins = [origin.strip() for origin in cors_origins.split(",")]
+    CORS(app, resources={r"/*": {"origins": origins}})
 
 init_db()  # ensure DB & table exists
 
